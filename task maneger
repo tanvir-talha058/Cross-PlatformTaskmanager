@@ -1,0 +1,75 @@
+import os
+import psutil
+import time
+from tabulate import tabulate
+
+def display_system_overview():
+    """Displays system resource usage."""
+    print("----- System Resource Overview -----")
+    print(f"CPU Usage: {psutil.cpu_percent()}%")
+    memory = psutil.virtual_memory()
+    print(f"Memory Usage: {memory.used / (1024 ** 3):.2f}GB / {memory.total / (1024 ** 3):.2f}GB")
+    disk = psutil.disk_usage('/')
+    print(f"Disk Usage: {disk.percent}%")
+    uptime = time.time() - psutil.boot_time()
+    print(f"System Uptime: {uptime // 3600:.0f} hours, {(uptime % 3600) // 60:.0f} minutes")
+    battery = psutil.sensors_battery()
+    if battery:
+        print(f"Battery: {battery.percent}%")
+    else:
+        print("Battery Status: Not available")
+    print()
+
+def display_top_processes():
+    """Displays top processes by CPU and memory usage."""
+    processes = []
+    for proc in psutil.process_iter(attrs=['pid', 'name', 'cpu_percent', 'memory_percent']):
+        try:
+            processes.append(proc.info)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    sorted_procs = sorted(processes, key=lambda x: (x['cpu_percent'], x['memory_percent']), reverse=True)[:10]
+    print(tabulate(sorted_procs, headers="keys", tablefmt="fancy_grid"))
+
+def kill_process():
+    """Kills a process by PID."""
+    try:
+        pid = int(input("Enter the PID of the process to kill: "))
+        process = psutil.Process(pid)
+        process.terminate()
+        process.wait(timeout=3)
+        print(f"Process {pid} terminated successfully.")
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        print(f"Failed to terminate process {pid}.")
+    except ValueError:
+        print("Invalid PID entered.")
+
+def main_menu():
+    """Main menu loop."""
+    while True:
+        os.system('clear' if os.name == 'posix' else 'cls')
+        print("===== System Task Manager =====")
+        display_system_overview()
+        print("1. View Top Processes")
+        print("2. Kill a Process")
+        print("3. Refresh Data")
+        print("4. Exit")
+        print()
+
+        choice = input("Select an option [1-4]: ")
+        if choice == "1":
+            display_top_processes()
+        elif choice == "2":
+            kill_process()
+        elif choice == "3":
+            continue
+        elif choice == "4":
+            print("Exiting...")
+            break
+        else:
+            print("Invalid option. Please try again.")
+
+        input("\nPress Enter to continue...")
+
+if __name__ == "__main__":
+    main_menu()
