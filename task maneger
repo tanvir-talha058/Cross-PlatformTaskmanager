@@ -3,6 +3,7 @@ import psutil
 import time
 from tabulate import tabulate
 
+
 def display_system_overview():
     """Displays system resource usage."""
     print("----- System Resource Overview -----")
