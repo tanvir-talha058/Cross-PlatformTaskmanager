@@ -1,0 +1,185 @@
+import tkinter as tk
+from tkinter import ttk
+import psutil
+import time
+import threading
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from collections import deque
+
+# Initialize deque for real-time data
+cpu_usage = deque([0] * 60, maxlen=60)
+memory_usage = deque([0] * 60, maxlen=60)
+disk_read = deque([0] * 60, maxlen=60)
+disk_write = deque([0] * 60, maxlen=60)
+net_sent = deque([0] * 60, maxlen=60)
+net_recv = deque([0] * 60, maxlen=60)
+
+# Update system data
+def update_performance_data():
+    while True:
+        disk_io = psutil.disk_io_counters()
+        net_io = psutil.net_io_counters()
+
+        cpu_usage.append(psutil.cpu_percent())
+        memory_usage.append(psutil.virtual_memory().percent)
+        disk_read.append(disk_io.read_bytes / 1e6)  # Convert to MB
+        disk_write.append(disk_io.write_bytes / 1e6)  # Convert to MB
+        net_sent.append(net_io.bytes_sent / 1e6)  # Convert to MB
+        net_recv.append(net_io.bytes_recv / 1e6)  # Convert to MB
+
+        time.sleep(1)
+
+# Update performance chart
+def update_performance_chart(canvas, axes):
+    while True:
+        data_pairs = [
+            (cpu_usage, "CPU Usage (%)", "tab:red"),
+            (memory_usage, "Memory Usage (%)", "tab:blue"),
+            (disk_read, "Disk Read (MB)", "tab:green"),
+            (disk_write, "Disk Write (MB)", "tab:orange"),
+            (net_sent, "Net Sent (MB)", "tab:purple"),
+            (net_recv, "Net Received (MB)", "tab:cyan"),
+        ]
+
+        for ax, (data, title, color) in zip(axes, data_pairs):
+            ax.clear()
+            ax.plot(data, color=color, linewidth=1.5)
+            ax.set_title(title, fontsize=10, color=color)
+            ax.set_ylim(0, 100 if "Usage" in title else max(data) * 1.2 + 1)
+            ax.grid(True, linestyle="--", alpha=0.7)
+        canvas.draw()
+        time.sleep(1)
+
+# Kill a process
+def kill_process(pid):
+    try:
+        process = psutil.Process(pid)
+        process.terminate()
+    except Exception as e:
+        print(f"Error terminating process {pid}: {e}")
+
+# Update processes in the table
+def update_process_table(tree):
+    while True:
+        for row in tree.get_children():
+            tree.delete(row)
+
+        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+            try:
+                pid = proc.info['pid']
+                name = proc.info['name']
+                cpu = proc.info['cpu_percent']
+                memory = proc.info['memory_percent']
+                tree.insert("", "end", values=(pid, name, f"{cpu:.1f}%", f"{memory:.1f}%"), tags=("process_row",))
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+
+        time.sleep(3)
+
+# Create Processes Tab
+def create_processes_tab(notebook):
+    frame = ttk.Frame(notebook)
+    notebook.add(frame, text="Processes")
+
+    tree = ttk.Treeview(frame, columns=("PID", "Name", "CPU %", "Memory %"), show="headings")
+    tree.heading("PID", text="PID")
+    tree.heading("Name", text="Name")
+    tree.heading("CPU %", text="CPU %")
+    tree.heading("Memory %", text="Memory %")
+
+    tree.column("PID", width=80, anchor="center")
+    tree.column("Name", width=200, anchor="w")
+    tree.column("CPU %", width=100, anchor="center")
+    tree.column("Memory %", width=100, anchor="center")
+
+    tree.pack(fill="both", expand=True, padx=10, pady=10)
+
+    scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+    tree.configure(yscroll=scrollbar.set)
+    scrollbar.pack(side="right", fill="y")
+
+    style = ttk.Style()
+    style.configure("Treeview", font=("Helvetica", 10), rowheight=25, background="#F0F8FF", fieldbackground="#F0F8FF")
+    style.configure("Treeview.Heading", font=("Helvetica", 12, "bold"), foreground="#4B0082")
+    style.map("Treeview", background=[("selected", "#FFD700")], foreground=[("selected", "#000000")])
+
+    # Create a frame for the End Process button
+    button_frame = ttk.Frame(frame)
+    button_frame.pack(fill="x", pady=10)
+
+    kill_button = ttk.Button(button_frame, text="End Process", command=lambda: kill_selected_process(tree))
+    kill_button.pack(pady=5)
+
+    # Disable button by default
+    kill_button.state(["disabled"])
+
+    def on_tree_select(event):
+        selected_item = tree.selection()
+        if selected_item:
+            kill_button.state(["!disabled"])
+        else:
+            kill_button.state(["disabled"])
+
+    tree.bind("<<TreeviewSelect>>", on_tree_select)
+
+    threading.Thread(target=update_process_table, args=(tree,), daemon=True).start()
+
+    return frame
+
+def kill_selected_process(tree):
+    selected_item = tree.selection()
+    if selected_item:
+        pid = int(tree.item(selected_item[0], "values")[0])
+        kill_process(pid)
+
+# Create Performance Tab
+def create_performance_tab(notebook):
+    frame = ttk.Frame(notebook)
+    notebook.add(frame, text="Performance")
+
+    fig = Figure(figsize=(12, 8), dpi=100)
+    axes = [
+        fig.add_subplot(321), 
+        fig.add_subplot(322), 
+        fig.add_subplot(323), 
+        fig.add_subplot(324),  
+        fig.add_subplot(325),  
+        fig.add_subplot(326), 
+    ]
+
+    # Configure figure layout
+    fig.tight_layout(pad=3)
+
+    canvas = FigureCanvasTkAgg(fig, master=frame)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.pack(fill="both", expand=True)
+
+    threading.Thread(target=update_performance_chart, args=(canvas, axes), daemon=True).start()
+
+    return frame
+
+# Main GUI
+def create_task_manager():
+    root = tk.Tk()
+    root.title("Cross-Platform Task Manager by Tanvir")
+    root.geometry("1200x800")
+    root.configure(bg="#f0f0f0")
+
+    # Notebook for tabs
+    notebook = ttk.Notebook(root)
+    notebook.pack(fill="both", expand=True)
+
+    # Add Processes Tab
+    create_processes_tab(notebook)
+
+    # Add Performance Tab
+    create_performance_tab(notebook)
+
+    # Start data update threads
+    threading.Thread(target=update_performance_data, daemon=True).start()
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    create_task_manager()
