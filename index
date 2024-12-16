@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-logo">
+          <h1>TaskManager</h1>
+        </div>
+        <ul class="navbar-links">
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="#tasks">Tasks</a></li>
+          <li><a href="#calendar">Calendar</a></li>
+          <li><a href="#settings">Settings</a></li>
+        </ul>
+        <div class="navbar-profile">
+          <img src="ashif.jpg" alt="Profile Picture">
+          <span>Ashif Mahmud</span>
+        </div>
+      </nav>
+</body>
+</html>
