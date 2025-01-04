@@ -1,3 +1,4 @@
+#Cross-Platform System Task Manager for Resource Monitoring and Process Management
 This project focuses on developing a comprehensive, cross-platform task manager tool that combines the
 essential features of Windows Task Manager, Linux Task Manager, and macOS Activity Monitor.
 
