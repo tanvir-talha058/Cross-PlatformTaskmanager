@@ -12,7 +12,6 @@
     overflow: hidden;
   }
 
-
   .dashboard-container {
     display: flex;
     width: 100%;
