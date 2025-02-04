@@ -16,7 +16,9 @@
     display: flex;
     width: 100%;
   }
-  
+
+
+
   /* Sidebar Styles */
   .sidebar {
     background-color: #1e1e2f;
