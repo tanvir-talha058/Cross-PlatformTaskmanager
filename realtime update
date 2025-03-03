@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from collections import deque
 
+
 # Initialize global variables for plotting
 cpu_usage = deque(maxlen=30)  # Store last 30 data points
 memory_usage = deque(maxlen=30)
