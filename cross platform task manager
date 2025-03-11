@@ -7,7 +7,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from collections import deque
 
+
 # Initialize deque for real-time date
+
 cpu_usage = deque([0] * 60, maxlen=60)
 memory_usage = deque([0] * 60, maxlen=60)
 disk_read = deque([0] * 60, maxlen=60)
