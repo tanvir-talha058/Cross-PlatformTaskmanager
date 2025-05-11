@@ -32,6 +32,7 @@ def display_top_processes():
     sorted_procs = sorted(processes, key=lambda x: (x['cpu_percent'], x['memory_percent']), reverse=True)[:10]
     print(tabulate(sorted_procs, headers="keys", tablefmt="fancy_grid"))
 
+
 def kill_process():
     """Kills a process by PID."""
     try:
