@@ -7,6 +7,7 @@ management, and application interaction. By integrating the capabilities of thes
 unified platform, users will benefit from a lightweight, efficient, and functional task manager accessible
 across operating systems.
 
+
 #Key functionalities include:
 ● Resource Tracking: Monitoring CPU, memory, disk, and network usage.
 ● Process Control: Viewing, prioritizing, and terminating processes.
