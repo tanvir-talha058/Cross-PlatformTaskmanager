@@ -1,6 +1,7 @@
 This project focuses on developing a comprehensive, cross-platform task manager tool that combines the
 essential features of Windows Task Manager, Linux Task Manager, and macOS Activity Monitor.
 
+
 Built-in
 Python, the tool will provide an intuitive command-line interface (CLI) for system monitoring, process
 management, and application interaction. By integrating the capabilities of these individual systems into a
